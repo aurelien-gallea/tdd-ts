@@ -8,10 +8,12 @@ export type PostMessageCommand = {
     author : string,
 };
 export interface MessageRepository {
+    getAllOfUser(user: string): Promise<Message[]>;
     save(message: Message): Promise<void>;
 }
 
 export interface DateProvider {
+    now: Date;
     getNow() : Date;
 }
 

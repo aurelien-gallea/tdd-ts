@@ -1,12 +1,13 @@
 import { log } from "console";
 import { DateProvider, EmptyMessageError, Message, MessageRepository, MessageTooLongError, PostMessageCommand, PostMessageUseCase } from "../post-message.usecase"
 import { InMemoryMessageRepository } from "../message.inmemory.repository";
+import { createMessagingFixture, MessagingFixture } from "./messaging.fixture";
 
 describe("feature: Posting a message", () => {
-    let fixture : Fixture;
+    let fixture : MessagingFixture;
 
     beforeEach(() => {
-        fixture = createFixture();
+        fixture = createMessagingFixture();
     })
 
     describe("Rule: A message can contain a maximum of 280 caracters", ()=> {
@@ -20,7 +21,7 @@ describe("feature: Posting a message", () => {
                 author : "Alice"
             })
 
-            fixture.thenPostMessageShouldBe({
+            fixture.thenMessageShouldBe({
                 id: 0,
                 text: "hello",
                 author: "Alice",
@@ -69,51 +70,3 @@ describe("feature: Posting a message", () => {
         })
     })
 })
-
-
-
-
-
-
-class StubDateProvider implements DateProvider {
-    now: Date
-    getNow(): Date {
-       return this.now; 
-    }
-}
-
-
-
-
-
-const createFixture = () => {
-    
-    const dateProvider = new StubDateProvider();
-    const messageRepository = new InMemoryMessageRepository();
-    const postMessageUseCase = new PostMessageUseCase(messageRepository, dateProvider);
-    let thrownError : Error;
-
-    return {
-        givenNowIs(now: Date){
-            dateProvider.now = now;
-        },
-       async whenUserPostsAMessage(postMessageCommand : PostMessageCommand) {
-            try {
-               await postMessageUseCase.handle(postMessageCommand);
-                
-            } catch (error) {
-                thrownError = error;
-            }
-        },
-        thenPostMessageShouldBe(expectedMessage :Message) {
-            expect(expectedMessage)
-            .toEqual(messageRepository.getMessagesById(expectedMessage.id))
-        },
-        thenErrorShouldBe(expectedErrorClass : new ()=> Error) {
-            expect(thrownError).toBeInstanceOf(expectedErrorClass);
-        }
-
-    }
-}
-
-type Fixture = ReturnType<typeof createFixture>;
